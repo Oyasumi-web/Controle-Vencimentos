@@ -132,8 +132,8 @@ video{width:100%;border-radius:8px;background:#000}
 <script>
 // ===== CONFIGURE AQUI (Supabase > Project Settings > API) =====
 // Use SOMENTE a chave "anon / public". NUNCA coloque a "service_role" aqui.
-const SB_URL = 'https://jxnmorhnmwmbppdorbyt.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4bm1vcmhubXdtYnBwZG9yYnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNzE3OTMsImV4cCI6MjEwODg0Nzc5M30.wRjZX9JPsFg0n59cimLAn-BlF0oSzqLZi3IVa_aiJGA';
+const SB_URL = 'COLE_A_URL_DO_PROJETO';
+const SB_KEY = 'COLE_A_CHAVE_ANON';
 // ==============================================================
 
 const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -182,9 +182,9 @@ async function boot() {
   const r = await sb.from('lojas').select('*').order('nome'); lojas = r.data || [];
   $('#login').hidden = true; $('#app').hidden = false;
   $('#who').textContent = me.nome;
-  $('#role').textContent = { admin:'Admin', lider:'Líder', estoquista:'Estoquista', atendente:'Atendente' }[me.papel] + (isAdm() ? ' · todas as lojas' : ' · ' + lojaNome(me.loja_id));
+  $('#role').textContent = { admin:'Admin', lider:'Líder', estoquista:'Estoquista', atendente:'Atendente' }[me.papel] + (me.papel === 'admin' ? ' · todas as lojas' : me.papel === 'lider' ? ' · gerencia todas · anota em ' + lojaNome(me.loja_id) : ' · ' + lojaNome(me.loja_id));
   const opts = lojas.filter(l => l.ativa || isAdm()).map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-  $('#lj').innerHTML = opts; $('#lj-box').hidden = !isAdm();
+  $('#lj').innerHTML = opts; $('#lj-box').hidden = me.papel !== 'admin';
   ['rel','exc'].forEach(p => { $('#f-' + p).innerHTML = filtros(p); $(`#${p}-lj`).innerHTML = '<option value="">Todas</option>' + opts; $(`#${p}-lj`).parentElement.hidden = !isAdm(); });
   $('#ib').hidden = !isAdm();
   ['rel','exc'].forEach(p => $('#f-' + p).querySelectorAll('select,input').forEach(el => el.onchange = () => load(p)));
@@ -231,7 +231,7 @@ $('#ean').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); chk().
 $('#qtd').oninput = $('#dt').oninput = upd;
 $('#send').onclick = async () => {
   $('#aerr').textContent = ''; $('#send').disabled = true;
-  const { error } = await sb.rpc('anotar_item', { p_loja: isAdm() ? +$('#lj').value : me.loja_id, p_ean: $('#ean').value.trim(), p_qtd: +$('#qtd').value, p_validade: $('#dt').value });
+  const { error } = await sb.rpc('anotar_item', { p_loja: me.papel === 'admin' ? +$('#lj').value : me.loja_id, p_ean: $('#ean').value.trim(), p_qtd: +$('#qtd').value, p_validade: $('#dt').value });
   if (error) { $('#aerr').textContent = msgErro(error); upd(); return; }
   toast('Salvo!'); $('#ean').value = ''; $('#qtd').value = 1; $('#chk').hidden = true; eanOk = false; upd(); $('#ean').focus();
 };
@@ -361,12 +361,10 @@ $('#xc').onclick = () => { const e = semDesc(); e.length ? dl(new Blob(['ean\n' 
 $('#ib').onclick = () => $('#imp').click();
 function csv(t) {
   const r = []; let row = [], c = '', q = false; t = t.replace(/^\uFEFF/, '');
-  const l1 = t.split(/\r?\n/)[0];
-  const sep = l1.split(';').length > l1.split(',').length ? ';' : ',';
   for (let i = 0; i < t.length; i++) { const ch = t[i];
     if (q) { if (ch === '"') { if (t[i+1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
     else if (ch === '"') q = true;
-    else if (ch === sep) { row.push(c); c = ''; }
+    else if (ch === ',') { row.push(c); c = ''; }
     else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i+1] === '\n') i++; row.push(c); r.push(row); row = []; c = ''; }
     else c += ch; }
   if (c || row.length) { row.push(c); r.push(row); }
