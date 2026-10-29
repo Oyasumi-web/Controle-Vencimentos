@@ -132,9 +132,10 @@ video{width:100%;border-radius:8px;background:#000}
 <script>
 // ===== CONFIGURE AQUI (Supabase > Project Settings > API) =====
 // Use SOMENTE a chave "anon / public". NUNCA coloque a "service_role" aqui.
-const SB_URL = 'COLE_A_URL_DO_PROJETO';
-const SB_KEY = 'COLE_A_CHAVE_ANON';
+const SB_URL = 'https://jxnmorhnmwmbppdorbyt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4bm1vcmhubXdtYnBwZG9yYnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNzE3OTMsImV4cCI6MjEwODg0Nzc5M30.wRjZX9JPsFg0n59cimLAn-BlF0oSzqLZi3IVa_aiJGA';
 // ==============================================================
+
 
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const $ = s => document.querySelector(s);
