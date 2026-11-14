@@ -36,7 +36,7 @@ input,select{width:100%;padding:12px;border:1px solid #aab4be;border-radius:8px;
 
 .fl{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
 
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.bar{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
 
 .it{display:flex;justify-content:space-between;gap:8px;border-left:8px solid #999;background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px}
 
@@ -61,6 +61,8 @@ input,select{width:100%;padding:12px;border:1px solid #aab4be;border-radius:8px;
 dialog{border:0;border-radius:12px;padding:16px;width:min(92vw,420px)}
 
 dialog::backdrop{background:#0008}
+
+#xl-exc{margin-bottom: 50px;}
 
 video{width:100%;border-radius:8px;background:#000}
 

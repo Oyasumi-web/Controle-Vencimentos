@@ -19,6 +19,12 @@ const lojaNome = id => (lojas.find(l => l.id === id) || {}).nome || '?';
 const cls = v => v < hoje() ? 'k' : v <= addM(1) ? 'r' : v <= addM(2) ? 'o' : v <= addM(3) ? 'y' : '';
 const msgErro = e => (e && e.message || 'Erro inesperado').replace(/^.*?:\s*(?=[A-ZÁÉÍÓÚ])/, '');
 
+// ícones (definidos uma vez só)
+const IC_OK = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z"/></svg>';
+const IC_ED = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/></svg>';
+const IC_DEL = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/></svg>';
+const IC_RES = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5"/></svg>';
+
 function toast(t, bad) {
   const m = $('#toast'); m.textContent = t; m.className = bad ? 'bad' : ''; m.hidden = false;
   clearTimeout(toast.t); toast.t = setTimeout(() => m.hidden = true, 3500);
@@ -50,13 +56,14 @@ async function boot() {
   const r = await sb.from('lojas').select('*').order('nome'); lojas = r.data || [];
   $('#login').hidden = true; $('#app').hidden = false;
   $('#who').textContent = me.nome;
-  $('#role').textContent = { admin:'Admin', lider:'Líder', estoquista:'Estoquista', atendente:'Atendente' }[me.papel] + (me.papel === 'admin' ? ' · todas as lojas' : me.papel === 'lider' ? ' · gerencia todas · anota em ' + lojaNome(me.loja_id) : ' · ' + lojaNome(me.loja_id));
+  const nomePapel = { admin:'Admin', lider:'Líder', estoquista:'Estoquista', atendente:'Atendente' }[me.papel] || me.papel;
+  $('#role').textContent = nomePapel + (me.papel === 'admin' ? ' · todas as lojas' : me.papel === 'lider' ? ' · gerencia todas · anota em ' + lojaNome(me.loja_id) : ' · ' + lojaNome(me.loja_id));
   const opts = lojas.filter(l => l.ativa || isAdm()).map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   $('#lj').innerHTML = opts; $('#lj-box').hidden = me.papel !== 'admin';
   ['rel','exc'].forEach(p => { $('#f-' + p).innerHTML = filtros(p); $(`#${p}-lj`).innerHTML = '<option value="">Todas</option>' + opts; $(`#${p}-lj`).parentElement.hidden = !isAdm(); });
-  $('#adm-bar').hidden = me.papel !== 'admin'; // exportar/importar: só Admin
+  $('#adm-bar').hidden = me.papel !== 'admin'; // exportar .pkl/.csv e importar: só Admin
   ['rel','exc'].forEach(p => $('#f-' + p).querySelectorAll('select,input').forEach(el => el.onchange = () => load(p)));
-  ['rel','exc'].forEach(p => $(`#${p}-q`).oninput = () => { clearTimeout(load.t); load.t = setTimeout(() => load(p), 300); });
+  ['rel','exc'].forEach(p => $(`#${p}-q`).oninput = () => { clearTimeout(load[p]); load[p] = setTimeout(() => load(p), 300); });
   go('anotar');
 }
 
@@ -87,12 +94,8 @@ async function chk() {
   box.hidden = false;
   if (data) {
     box.className = 'chk';
-    box.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-square-fill" viewBox="0 0 16 16">
-  <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z"/>
-</svg> Cadastrado: <b>${esc(data.descricao)}</b><br>É este produto?<br><button class="btn" id="sim">Sim</button><button class="btn s" id="nao">Não</button>`;
-    $('#sim').onclick = () => { eanOk = true; box.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-square-fill" viewBox="0 0 16 16">
-  <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z"/>
-</svg> <b>${esc(data.descricao)}</b>`; upd(); $('#qtd').focus(); };
+    box.innerHTML = `${IC_OK} Cadastrado: <b>${esc(data.descricao)}</b><br>É este produto?<br><button class="btn" id="sim">Sim</button><button class="btn s" id="nao">Não</button>`;
+    $('#sim').onclick = () => { eanOk = true; box.innerHTML = `${IC_OK} <b>${esc(data.descricao)}</b>`; upd(); $('#qtd').focus(); };
     $('#nao').onclick = () => { $('#ean').value = ''; box.hidden = true; upd(); $('#ean').focus(); };
   } else { box.className = 'chk w'; box.textContent = '⚠️ EAN sem cadastro. Será anotado sem descrição.'; eanOk = true; }
   upd();
@@ -108,10 +111,10 @@ function dtISO() {
   return x.getFullYear() == y && x.getMonth() == mo - 1 && x.getDate() == d && y >= 2000 && y <= 2100 ? `${y}-${mo}-${d}` : null;
 }
 $('#dt').oninput = e => {
-  const del = (e.inputType || '').startsWith('delete'), v = $('#dt').value.replace(/\D/g, '').slice(0, 8);
+  const apagou = (e.inputType || '').startsWith('delete'), v = $('#dt').value.replace(/\D/g, '').slice(0, 8);
   let o = v.slice(0, 2);
-  if (v.length > 2) o += '/' + v.slice(2, 4); else if (v.length === 2 && !del) o += '/';
-  if (v.length > 4) o += '/' + v.slice(4); else if (v.length === 4 && !del) o += '/';
+  if (v.length > 2) o += '/' + v.slice(2, 4); else if (v.length === 2 && !apagou) o += '/';
+  if (v.length > 4) o += '/' + v.slice(4); else if (v.length === 4 && !apagou) o += '/';
   $('#dt').value = o;
   $('#aerr').textContent = o.length === 10 && !dtISO() ? 'Data inválida.' : '';
   upd();
@@ -145,7 +148,13 @@ $('#cam').onclick = async () => {
         s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
       rd = new ZXing.BrowserMultiFormatReader(); rd.decodeFromVideoDevice(null, 'vid', r => { if (r) done(r.getText()); });
     }
-  } catch { $('#sd').close(); toast('Não foi possível abrir a câmera (use HTTPS e permita o acesso).', 1); }
+  } catch (e) {
+    $('#sd').close();
+    toast(e && e.name === 'NotAllowedError' ? 'Permissão da câmera negada. Libere nas configurações do navegador.'
+      : e && e.name === 'NotFoundError' ? 'Nenhuma câmera encontrada.'
+      : !window.isSecureContext ? 'A câmera só funciona em site HTTPS.'
+      : 'Não foi possível abrir a câmera ou carregar o leitor.', 1);
+  }
 };
 
 // ---------- listas ----------
@@ -158,6 +167,7 @@ async function all(mk) {
   let out = [], f = 0;
   for (;;) { const { data, error } = await mk().range(f, f + 999); if (error) throw error; out = out.concat(data); if (data.length < 1000) return out; f += 1000; }
 }
+const MAX_TELA = 300; // quantos itens desenhar na tela (o Excel leva todos)
 async function load(p) {
   const L = $(`#${p}-l`), g = id => $(`#${p}-${id}`).value; L.textContent = 'Carregando…';
   try {
@@ -175,7 +185,9 @@ async function load(p) {
     if (g('o') === 'desc') ok.reverse();
     rows = ok.concat(venc); // vencidos sempre embaixo
     cur[p] = rows;
-    L.innerHTML = rows.length ? rows.map(r => row(p, r)).join('') : '<div class="card">Nenhum item encontrado.</div>';
+    L.innerHTML = rows.length
+      ? rows.slice(0, MAX_TELA).map(r => row(p, r)).join('') + (rows.length > MAX_TELA ? `<div class="card">Mostrando ${MAX_TELA} de ${rows.length}. Refine o filtro ou exporte para Excel.</div>` : '')
+      : '<div class="card">Nenhum item encontrado.</div>';
   } catch (e) { L.innerHTML = `<div class="card err">${esc(msgErro(e))}</div>`; }
 }
 function row(p, r) {
@@ -183,14 +195,8 @@ function row(p, r) {
   const d = Math.round((new Date(r.validade + 'T00:00') - new Date(hoje() + 'T00:00')) / 864e5);
   const quando = d < 0 ? `vencido há ${-d} d` : d === 0 ? 'vence hoje' : `faltam ${d} d`;
   let ac = '';
-  if (p === 'rel' && can(r.id)) ac = (isAdm() ? `<button data-e="${r.id}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
-  <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
-</svg></button>` : '') + `<button data-d="${r.id}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-  <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-</svg></button>`;
-  if (p === 'exc' && isAdm()) ac = `<button data-r="${r.id}" title="Restaurar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-return-left" viewBox="0 0 16 16">
-  <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5"/>
-</svg></button>`;
+  if (p === 'rel' && can(r.id)) ac = (me.papel === 'admin' ? `<button data-e="${r.id}" title="Editar">${IC_ED}</button>` : '') + `<button data-d="${r.id}" title="Excluir">${IC_DEL}</button>`;
+  if (p === 'exc' && isAdm()) ac = `<button data-r="${r.id}" title="Restaurar">${IC_RES}</button>`;
   return `<div class="it ${c}"><div><b>${c === 'k' ? '🚨 ' : ''}${esc(r.descricao || 'Sem descrição')}</b>
    <small>EAN ${esc(r.ean)} · ${esc(lojaNome(r.loja_id))} · Qtd <b>${r.quantidade}</b></small>
    <small>${fmt(r.validade)} · ${quando}</small>
@@ -232,19 +238,30 @@ $('#dok').onclick = async () => {
   } finally { $('#dok').disabled = false; $('#dp').value = ''; }
 };
 
-// ---------- editar (admin/líder) ----------
+// ---------- editar (SÓ admin): descrição, quantidade e validade ----------
 function openEdit(r) {
-  if (!r) return; ed = r.id; $('#einfo').textContent = `${r.descricao || 'Sem descrição'} · EAN ${r.ean}`;
-  $('#eq').value = r.quantidade; $('#ev').value = r.validade; $('#eerr').textContent = ''; $('#ed').showModal();
+  if (!r || me.papel !== 'admin') return; ed = r;
+  $('#einfo').textContent = `EAN ${r.ean} · ${lojaNome(r.loja_id)}`;
+  $('#edesc').value = r.descricao || ''; $('#eq').value = r.quantidade; $('#ev').value = r.validade;
+  $('#eerr').textContent = ''; $('#ed').showModal();
 }
 $('#ec').onclick = () => $('#ed').close();
 $('#eok').onclick = async () => {
-  const { error } = await sb.rpc('editar_item', { p_id: ed, p_qtd: +$('#eq').value, p_validade: $('#ev').value });
-  if (error) return $('#eerr').textContent = msgErro(error);
-  $('#ed').close(); toast('Atualizado'); load('rel');
+  if (me.papel !== 'admin' || !ed) return;
+  const desc = $('#edesc').value.trim().slice(0, 200), er = x => ($('#eerr').textContent = x);
+  $('#eok').disabled = true;
+  try {
+    if (desc && desc !== (ed.descricao || '')) { // a descrição é do produto: vale para todas as lojas
+      const { error } = await sb.rpc('importar_produtos', { p: [{ ean: ed.ean, descricao: desc }] });
+      if (error) return er(msgErro(error));
+    }
+    const { error } = await sb.rpc('editar_item', { p_id: ed.id, p_qtd: +$('#eq').value, p_validade: $('#ev').value });
+    if (error) return er(msgErro(error));
+    $('#ed').close(); toast('Atualizado'); load('rel');
+  } finally { $('#eok').disabled = false; }
 };
 
-// ---------- exportar / importar ----------
+// ---------- exportar / importar (admin) ----------
 function dl(b, n) { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = n; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 function pkl(arr) { // pickle protocolo 2: list[str], abre direto com pickle.load() no Python
   const e = new TextEncoder(), p = [new Uint8Array([0x80, 2, 0x5d, 0x28])];

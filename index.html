@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co; img-src 'self' data:; media-src 'self' blob:; object-src 'none'; base-uri 'none'">
 <title>Controle de Validade</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
 <link rel="icon" href="./favicon.ico" sizes="any">
 </head>
 <body>
@@ -72,11 +72,13 @@
 </svg> Importar .csv</button>
     <input type="file" id="imp" accept=".csv,text/csv" hidden>
    </div>
+   <button class="btn s" id="xl-rel" type="button">📥 Exportar Excel</button>
    <div id="rel-l"></div>
   </section>
 
   <section id="t-exc" hidden>
    <div class="card" id="f-exc"></div>
+   <button class="btn s" id="xl-exc" type="button">📥 Exportar Excel</button>
    <div id="exc-l"></div>
   </section>
  </main>
@@ -96,7 +98,9 @@
 
 <dialog id="ed">
  <h3>Editar produto</h3>
+ <label>Descrição do produto</label><input id="edesc" maxlength="200">
  <p id="einfo"></p>
+
  <label>Quantidade</label><input id="eq" type="number" min="1" max="100000">
  <label>Data de validade</label><input id="ev" type="date">
  <p class="err" id="eerr"></p>
@@ -111,7 +115,8 @@
 
 <div id="toast" hidden></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+  <script src="exportar.js"></script>
 </body>
 </html>
